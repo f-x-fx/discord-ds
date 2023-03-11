@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>&#xE013; Discord DS - DMs e Grupos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/app.css">
+  </head>
+  <body>
+    <div id="cima">
+      <div class="conteudo-cima">
+        <img src="/static/discord_logo.png" class="logo">
+      </div>
+    </div>
+    <div id="baixo">
+      <div class="menu">
+        <a href="javascript:history.back()"><img src="/static/small/discord_icon.png" class="icone"></a>
+        <a href="/grupos"><img src="/static/small/friends_icon.png" class="icone"></a>
+        <a href="/servidores"><img src="/static/small/server_icon.png" class="icone"></a>
+        <a href="/usuario"><img src="/static/small/user_icon.png" class="icone"></a>
+      </div>
+      <div class="conteudo-baixo">
+        <ul id="grupos">
+          {% for grupo in grupos %}
+              <li class="lista">
+                <a href="/mensagens/{{ grupo.id_grupo }}" class="ref"> {{ grupo.tipo }} {{ grupo.nome }}</a>
+              </li>
+              <hr>
+            {% endfor %}
+        </ul>
+      </div>
+    </div>
+  <script>window.scrollTo(0, document.body.scrollHeight + 1000);</script>
+  </body>
+</html>

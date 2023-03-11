@@ -1,0 +1,116 @@
+html, body {
+        font-family: Arial;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: #36393e;
+        color: #f1f2eb;
+      }
+      #cima, #baixo {
+        position: absolute;
+        width: 240px;
+        height: 176px;
+      }
+      #cima {
+        top: 0;
+      }
+      #baixo {
+        bottom: 0;
+        top: 176px;
+       float:  right;
+      }
+      .conteudo-cima {
+          text-align: center;
+      }
+      .conteudo-baixo {
+          width: 240px;
+          height: 146px;
+          word-wrap: break-word;
+
+      }
+      .area-de-texto{
+        font-size: 6px;
+
+        height: 20px;
+      }
+      .menu {
+          text-align: center;
+          background-color: #282b30;
+          height: 30px;
+      }
+      .icone
+      {
+      width: 30px;
+      height 30px;
+      opacity: 0.90;
+      margin-left:5px;
+      }
+      .logo {
+          margin-top: 50px;
+      }
+      hr {
+       background-color: #46484f;
+        height: 1px;
+        border: 0;
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        width: 240px;
+        height: 116px;
+        overflow-y: auto;
+        padding: 0;
+      }
+      .lista {
+        padding: 5px;
+        margin-top:4px;
+        margin-bottom: 4px;
+      }
+      li {
+        margin-left:6px;
+        font-size:8px;
+      }
+      .horas
+      {
+        color: #b8b9bf;
+        font-size:6px;
+      }
+      .mensagem
+      {
+        color: #a8abae;
+      }
+      .caixa-de-texto
+      {
+      width:230px;
+      height:20px;
+      margin-top:5px;
+      margin-left:5px;
+      margin-right:5px;
+      background-color: #424549;
+
+      }
+      textarea {
+      font-size:8px;
+      border: none;
+      outline: none;
+      overflow:hidden;
+      resize:none;
+        background-color: #424549;
+       color: #a8abae;
+      width: 200px;
+      height:16px;
+      }
+      .enviar-mensagem
+      {
+
+      width:15px;
+      height:15px;
+      margin-top:3px;
+      }
+      .nome {
+        color: #fff;
+
+
+        font-size:12px;
+        text-decoration: none;
+      }

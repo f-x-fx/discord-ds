@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>&#xE013; Discord DS - Autenticação</title>
+    <style>
+        body {
+            background-color: #36393e;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <script>
+    var senhaDiscord = "q";
+    function checkStatus() {
+      var xhr = new XMLHttpRequest();
+      var params = '?senha=' + senhaDiscord;
+      xhr.open('GET', '/status' + params, true);
+      xhr.onreadystatechange = function() {
+        if (xhr.status === 200 && xhr.readyState === 4) {
+            if(xhr.responseText == "0"){
+                location.href = "/servidores";
+            }
+            else {
+                autenticar();
+            }
+        }
+      };
+      xhr.send();
+    }
+    function autenticar(){
+      var senha = prompt("Digite a senha do Discord:");
+      senhaDiscord=senha;
+      checkStatus();
+    }
+    checkStatus();
+
+    </script>
+</body>
+</html>

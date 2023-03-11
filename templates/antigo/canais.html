@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Discord DS - Canais de Texto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script type="text/javascript">
+            var id_canal_texto = "{{ servidor }}";
+    </script>
+    <script src="/static/scripts/canais.js"></script>
+  </head>
+  <body>
+    <div id="cima">
+      <div class="conteudo-cima">
+        <img src="/static/discord_logo.png" class="logo">
+      </div>
+    </div>
+    <div id="baixo">
+      <div class="menu">
+        <a href="javascript:history.back()"><img src="/static/small/discord_icon.png" class="icone"></a>
+        <a href="/grupos"><img src="/static/small/friends_icon.png" class="icone"></a>
+        <a href="/servidores"><img src="/static/small/server_icon.png" class="icone"></a>
+        <a href="/usuario"><img src="/static/small/user_icon.png" class="icone"></a>
+      </div>
+      <div class="conteudo-baixo">
+        <ul id="canais_de_texto"></ul>
+      </div>
+    </div>
+
+  </body>
+</html>

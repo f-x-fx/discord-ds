@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>&#xE013; Discord DS - Mensagens</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/msg.css">
+    <script>
+      {% if servidor == "null" %}
+          var caminho_listar_mensagens = "/lista/mensagens/{{ canal }}";
+          var caminho_enviar_mensagem = "/enviar/mensagem/{{ canal }}";
+      {% else %}
+          var caminho_listar_mensagens = "/lista/mensagens/{{ servidor }}/{{ canal }}";
+          var caminho_enviar_mensagem = "/enviar/mensagem/{{ servidor }}/{{ canal }}";
+      {% endif %}
+    </script>
+    <script src="/static/scripts/mensagens.js"></script>
+  </head>
+  <body>
+    <div id="cima">
+      <div class="conteudo-cima">
+        <img src="/static/discord_logo.png" class="logo">
+      </div>
+    </div>
+    <div id="baixo">
+      <div class="menu">
+        <a href="/reniciar" title="Reniciar"><img src="/static/small/discord_icon.png" class="icone"></a>
+        <a href="/grupos" title="DMS ou GPs"><img src="/static/small/friends_icon.png" class="icone"></a>
+        <a href="/servidores" title="Servidores"><img src="/static/small/server_icon.png" class="icone"></a>
+        <a href="/client" title="Usuario"><img src="/static/small/user_icon.png" class="icone"></a>
+      </div>
+      <div class="conteudo-baixo" id="conteudo-baixo">
+        <ul id="mensagens">
+          {% for mensagem in mensagens %}
+            <li>
+              <a href="/usuario/{{ mensagem.id_autor }}" class="nome">{{ mensagem.nome_autor }}</a>
+              <span class="horas">{{ mensagem.horas }}</span>
+              <p class="mensagem">{{ mensagem.mensagem }}</p>
+              {{ mensagem.html_externo | safe }}
+              <br>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="area-de-texto">
+          <div class="caixa-de-texto">
+            <textarea id="mensagem"></textarea>
+          <input type="image" class="enviar-mensagem" onclick="enviarMensagem();" src="/static/small/send_icon.png" />
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </body>
+</html>

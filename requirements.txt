@@ -1,0 +1,5 @@
+discord.py-self[voice]
+flask
+redis
+pillow
+requests
