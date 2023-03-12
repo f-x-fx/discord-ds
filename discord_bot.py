@@ -1,6 +1,7 @@
 from datetime import timedelta
 from random import gauss
 import urllib, discord, redis, asyncio, json
+import re, html
 from utils import emoticon
 
 r = redis.Redis(host='localhost', port=6379, db=0)
@@ -89,6 +90,19 @@ async def historico_mensagens(id_servidor, id_canal_texto):
         print(e)
         return "[]"
 
+def converter_links(string):
+  # importar os módulos re e html para usar expressões regulares e escape de html
+  global html
+  # fazer o escape da string para html
+  mensagem = html.escape(f"{string}")
+  # definir o padrão para reconhecer links na mensagem
+  padrao = r"(http(s)?://\S+)"
+  # substituir cada link pelo seu equivalente em html
+  html_gerado = re.sub(padrao, r"<a class='link-proxy' href='http://ndsi.is-great.net/index.php?\1'>\1</a>", mensagem)
+  html_gerado = html_gerado.replace("\n", "<br>")
+  # retornar a mensagem convertida em html
+  return html_gerado
+
 
 def servidor_liberado(id_servidor):
     if id_servidor in lista_ids_liberadas: return True
@@ -105,6 +119,17 @@ def lista_canais_texto(id_canal):
                 "id_canal": str(text_channel.id)
             })
     return json.dumps(canais_texto)
+
+
+def linkify(message):
+  # importar o módulo re para usar expressões regulares
+
+  # definir o padrão para reconhecer links na mensagem
+  pattern = r"(http(s)?://\S+)"
+  # substituir cada link pelo seu equivalente em html
+  html = re.sub(pattern, r"<a href='\1'>\1</a>", message)
+  # retornar a mensagem convertida em html
+  return html
 
 
 def lista_servidores():
@@ -162,8 +187,9 @@ def gerar_dict_mensagem(message):
     todos_links = ""
     if message.attachments:
         for arquivo in message.attachments:
-            todos_links = f'{todos_links}<a href="/proxy/imagem?url={urllib.parse.quote(str(arquivo).encode("utf8"), safe="")}">{arquivo.content_type}</a>'
-        mensagem = f"{message.content}"
+            if arquivo.content_type == "image/png" or arquivo.content_type == "image/jpeg":
+                todos_links = f'{todos_links}<a href="/proxy/imagem?url={urllib.parse.quote(str(arquivo).encode("utf8"), safe="")}"><img src="/proxy/miniatura?url={urllib.parse.quote(str(arquivo).encode("utf8"), safe="")}"></img></a>'
+        mensagem = f"{processar_mensagem(message.content)}"
     else:
         mensagem = processar_mensagem(message.content)
     return {
@@ -194,7 +220,7 @@ def processar_horas(horario):
 
 
 def processar_mensagem(mensagem):
-    return emoticon.converter(mensagem)
+    return converter_links(emoticon.converter(mensagem))
 
 
 def carregar_discord():

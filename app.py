@@ -145,16 +145,18 @@ def api_servidores():
     return lista
 
 
-@app.route("/enviar/mensagem/<canal>/<conteudo>/<horario>")
+@app.route("/enviar/mensagem/<canal>/<horario>", methods=['POST'])
 @auth.login_required
-def enviar_mensagem(canal, conteudo, horario):
+def enviar_mensagem(canal, horario):
+    conteudo = request.data.decode()
     print(horario)
     return api_enviar_mensagem(None, canal, conteudo, horario)
 
 
-@app.route("/enviar/mensagem/<servidor>/<canal>/<conteudo>/<horario>")
+@app.route("/enviar/mensagem/<servidor>/<canal>/<horario>", methods=['POST'])
 @auth.login_required
-def enviar_mensagem_servidor(servidor, canal, conteudo, horario):
+def enviar_mensagem_servidor(servidor, canal, horario):
+    conteudo = request.data.decode()
     print(horario)
     return api_enviar_mensagem(servidor, canal, conteudo, horario)
 
@@ -246,6 +248,41 @@ def pagina_nao_encontrada(e):
 @auth.login_required
 def retornar_ip():
     return f"IP: {pegar_ip()} <br><br> {str(request.headers)}"
+
+
+@app.route('/proxy/miniatura')
+@auth.login_required
+def baixar_miniatura():
+    # obter a URL da imagem a partir do parâmetro de consulta 'url'
+    url_da_imagem = request.args.get('url')
+    largura_da_miniatura = 200
+    # fazer a solicitação HTTP para obter a imagem
+    resposta = requests.get(url_da_imagem)
+
+    # verificar se a solicitação foi bem-sucedida
+    if resposta.status_code == 200:
+        # obter o conteúdo da imagem a partir da resposta HTTP
+        conteudo_da_imagem = resposta.content
+
+        # abrir a imagem usando a biblioteca Pillow
+        imagem = Image.open(io.BytesIO(conteudo_da_imagem))
+        if imagem.mode == 'RGBA':
+            imagem = imagem.convert('RGB')
+        # redimensionar a imagem se a largura for maior que 180 pixels
+        if imagem.width > largura_da_miniatura:  # alterar a condição para verificar a largura em vez da altura
+            width = largura_da_miniatura
+            height = int(imagem.height * (
+                        largura_da_miniatura / imagem.width))  # alterar a fórmula para calcular a altura proporcional à largura
+            imagem = imagem.resize((width, height))
+
+         # enviar a imagem como uma resposta do Flask
+        saida = io.BytesIO()
+        imagem.save(saida, format='JPEG')
+        saida.seek(0)
+        return send_file(saida, mimetype='image/jpeg')
+
+    # se a solicitação não foi bem-sucedida, retornar uma mensagem de erro
+    return 'Erro ao baixar imagem', 400
 
 
 @app.route('/proxy/imagem')

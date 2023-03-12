@@ -34,7 +34,7 @@
             <li>
               <a href="/usuario/{{ mensagem.id_autor }}" class="nome">{{ mensagem.nome_autor }}</a>
               <span class="horas">{{ mensagem.horas }}</span>
-              <p class="mensagem">{{ mensagem.mensagem }}</p>
+              <p class="mensagem">{{ mensagem.mensagem | safe }}</p>
               {{ mensagem.html_externo | safe }}
               <br>
             </li>

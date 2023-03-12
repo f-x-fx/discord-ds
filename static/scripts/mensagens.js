@@ -36,8 +36,8 @@ function enviarMensagem() {
   {
       enviar_mensagem = false;
       var mensagem = document.getElementById('mensagem').value;
-      xhr_enviar_mensagem.open('GET', caminho_enviar_mensagem + "/" + encodeURIComponent(mensagem) + "/" + (new Date()).getTime(), true);
-      xhr_enviar_mensagem.send(null);
+      xhr_enviar_mensagem.open('POST', caminho_enviar_mensagem + "/" + (new Date()).getTime(), true);
+      xhr_enviar_mensagem.send(mensagem);
 
   }
   else
@@ -72,7 +72,7 @@ function atualizarMensagens() {
 			li.appendChild(span);
 			var p = document.createElement('p');
 			p.className = 'mensagem';
-			p.innerText = mensagem.mensagem;
+			p.innerHTML = mensagem.mensagem;
 			li.appendChild(p);
 			li.innerHTML = li.innerHTML + mensagem.html_externo + "<br>";
 			lista.appendChild(li);

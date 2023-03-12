@@ -73,7 +73,7 @@ html, body {
       .horas
       {
         color: #b8b9bf;
-        font-size:6px;
+        font-size:10px;
       }
       .mensagem
       {
@@ -113,4 +113,8 @@ html, body {
 
         font-size:12px;
         text-decoration: none;
+      }
+      .link-proxy
+      {
+        color: #00A8FC;
       }
