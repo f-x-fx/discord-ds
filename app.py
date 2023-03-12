@@ -1,78 +1,94 @@
-import io
-import logging
-
-from flask import Flask, render_template, request, Response, redirect, url_for,  request, send_file
-
-from PIL import Image
-import json
-import redis
-import random
-import string
-import subprocess as sp
-import requests
-r = redis.Redis(host="localhost", port=6379, db=0)
-
+import io, logging, json, redis, random, string, requests
+from flask import Flask, render_template, abort, redirect, url_for,  request, send_file
 from flask.logging import default_handler
-
+from flask_httpauth import HTTPBasicAuth
+from PIL import Image
+import subprocess as sp
+# Conecta ao Redis, se houver falha, o aplicativo web não irá funcionar.
+r = redis.Redis(host="localhost", port=6379, db=0)
+# Logging caso necessite
 root = logging.getLogger()
 root.addHandler(default_handler)
-
+# Gerar código aleatório para sessão
 app = Flask(__name__)
-secret = ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation) for i in range(32))
-secret = 'fds'
-print(secret)
-app.config["SECRET_KEY"] = secret
-from flask import session
+app.config["SECRET_KEY"] = ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation) for i in range(32))
+# variáveis
 extProc = None
 bot_thread = None
 didnt_start = True
-senha_app = ""
+senha_app = "" # Senha para não entrarem no seu Discord ao acessar a página.
+auth = HTTPBasicAuth()
+usuarios = {
+    "admin": "senha",
+}
+ip_liberados = ["127.0.0.1"]
+max_tentativas = 3
+def liberar_ip(ip):
+    ip_liberados.append(ip)
+
+
+@auth.verify_password
+def verificar_senha(usuario, senha):
+    if pegar_ip() in ip_liberados:
+        return usuario
+    if usuario in usuarios and \
+            usuarios.get(usuario) == senha:
+        if not pegar_ip() in ip_liberados:
+            liberar_ip(pegar_ip())
+
+        return usuario
+    else:
+        adicionar_ip(pegar_ip())
+        return None
+
 
 @app.route("/")
+@auth.login_required
 def index():
-    return render_template("index.html")
+    return redirect(url_for('servidores_html'))
+
+
+def pegar_ip():
+    headers_list = request.headers.getlist("HTTP_X_FORWARDED_FOR")
+    http_x_real_ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+
+    ip_address = headers_list[0] if headers_list else http_x_real_ip
+    return ip_address
+
 
 @app.route("/servidores")
+@auth.login_required
 def servidores_html():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     return render_template("servidores.html", servidores=json.loads(api_servidores()))
 
+
 @app.route("/reniciar")
+@auth.login_required
 def reniciar():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return reniciar_discord()
+         return reniciar_discord()
+
 
 @app.route("/grupos")
+@auth.login_required
 def grupos_html():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return render_template("grupos.html", grupos=json.loads(api_grupos()))
+         return render_template("grupos.html", grupos=json.loads(api_grupos()))
+
 
 @app.route("/canais_de_texto/<servidor>")
+@auth.login_required
 def canais_texto_html(servidor):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return render_template("canais.html", servidor=f"{servidor}", canais_de_texto=json.loads(api_canais_texto(servidor)))
+         return render_template("canais.html", servidor=f"{servidor}", canais_de_texto=json.loads(api_canais_texto(servidor)))
+
 
 @app.route("/mensagens/<canal>")
+@auth.login_required
 def mensagens_dm_html(canal):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return gerar_html_mensagens(None,canal)
+         return gerar_html_mensagens(None,canal)
 
 
 @app.route("/mensagens/<servidor>/<canal>")
+@auth.login_required
 def mensagens_html(servidor, canal):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     return gerar_html_mensagens(servidor,canal)
 
 
@@ -119,31 +135,6 @@ def gerar_html_mensagens(servidor, canal):
     else:
         return render_template("mensagens.html", servidor="null", canal=canal, mensagens=json.loads(historico))
 
-@app.route("/iniciar")
-def iniciar():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    global didnt_start
-    if didnt_start:
-        didnt_start = False
-        return {
-            "status": r.lpush("list_acoes", json.dumps({"acao": "carregar_discord"}))
-        }
-    return "ja comecou"
-
-
-@app.route("/client")
-def client():
-    return r.get("nome")
-
-
-@app.route("/lista/servidores")
-def servidores():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return api_servidores()
 
 def api_servidores():
     print(r.lpush("list_acoes", json.dumps({"acao": "carregar_lista_servidor"})))
@@ -153,28 +144,17 @@ def api_servidores():
     r.delete("lista_servidores")
     return lista
 
-@app.route("/lista/grupos")
-def grupos():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return grupos
-
 
 @app.route("/enviar/mensagem/<canal>/<conteudo>/<horario>")
+@auth.login_required
 def enviar_mensagem(canal, conteudo, horario):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     print(horario)
     return api_enviar_mensagem(None, canal, conteudo, horario)
 
 
 @app.route("/enviar/mensagem/<servidor>/<canal>/<conteudo>/<horario>")
+@auth.login_required
 def enviar_mensagem_servidor(servidor, canal, conteudo, horario):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     print(horario)
     return api_enviar_mensagem(servidor, canal, conteudo, horario)
 
@@ -236,50 +216,70 @@ def reniciar_discord():
     except Exception as e:
         return f"{e}"
 
+ip_ban_list = {'191.123.123.21': 3}
+
+
+@app.before_request
+def detectar_ip():
+    ip = pegar_ip()
+    if ip in ip_ban_list and ip_ban_list[ip] > max_tentativas:  # verifica se o valor é maior que 2
+        abort(403)  # bloqueia o acesso
+
+
+def adicionar_ip(ip):
+
+    if ip in ip_ban_list:  # verifica se o IP já está no dicionário
+        ip_ban_list[ip] += 1  # incrementa o valor em 1
+    else:  # se não estiver no dicionário
+        ip_ban_list[ip] = 1  # adiciona com o valor 1
+    print(ip_ban_list)
+    print(ip + " adicionado")
+
+
+@app.errorhandler(404)
+@auth.login_required
+def pagina_nao_encontrada(e):
+    return e
+
+
+@app.route('/ip')
+@auth.login_required
+def retornar_ip():
+    return f"IP: {pegar_ip()} <br><br> {str(request.headers)}"
 
 
 @app.route('/proxy/imagem')
-def download_image():
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    # obter a URL da imagem a partir do parâmetro de consulta 'url'
-    image_url = request.args.get('url')
+@auth.login_required
+def baixar_imagem():
+         # obter a URL da imagem a partir do parâmetro de consulta 'url'
+    url_da_imagem = request.args.get('url')
 
     # fazer a solicitação HTTP para obter a imagem
-    response = requests.get(image_url)
+    resposta = requests.get(url_da_imagem)
 
     # verificar se a solicitação foi bem-sucedida
-    if response.status_code == 200:
+    if resposta.status_code == 200:
         # obter o conteúdo da imagem a partir da resposta HTTP
-        image_content = response.content
+        conteudo_da_imagem = resposta.content
 
         # abrir a imagem usando a biblioteca Pillow
-        image = Image.open(io.BytesIO(image_content))
-        if image.mode == 'RGBA':
-            image = image.convert('RGB')
+        imagem = Image.open(io.BytesIO(conteudo_da_imagem))
+        if imagem.mode == 'RGBA':
+            imagem = imagem.convert('RGB')
         # redimensionar a imagem se a altura for maior que 600 pixels
-        if image.height > 530:
-            width = int(image.width * (530 / image.height))
+        if imagem.height > 530:
+            width = int(imagem.width * (530 / imagem.height))
             height = 530
-            image = image.resize((width, height))
+            imagem = imagem.resize((width, height))
 
         # enviar a imagem como uma resposta do Flask
-        output = io.BytesIO()
-        image.save(output, format='JPEG')
-        output.seek(0)
-        return send_file(output, mimetype='image/jpeg')
+        saida = io.BytesIO()
+        imagem.save(saida, format='JPEG')
+        saida.seek(0)
+        return send_file(saida, mimetype='image/jpeg')
 
     # se a solicitação não foi bem-sucedida, retornar uma mensagem de erro
     return 'Erro ao baixar imagem', 400
-
-
-@app.route("/lista/canais_texto/<servidor>")
-def canais_texto(servidor):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
-    return api_canais_texto(servidor)
 
 def api_canais_texto(servidor):
     id_servidor = servidor
@@ -295,42 +295,20 @@ def api_canais_texto(servidor):
     r.delete(f"lista_canais_texto.{id_servidor}")
     return lista
 
-
-@app.route("/status")
-def status():
-    if "authenticated" in session:
-        if session["authenticated"]:
-            return '0'
-    global didnt_start
-    global senha_app
-    senha = request.args.get("senha")
-    print(senha, senha_app)
-    if senha != senha_app:
-        print("senha invalida")
-        return Response(status=200)
-    else:
-        session["authenticated"] = True
-        print("autenticado")
-        return '0'
-
-
 @app.route("/lista/mensagens/<canal>/<horario>", methods=["GET"])
+@auth.login_required
 def get_messages(canal, horario):
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     print(horario)
     return pegar_mensagens(None, canal)
 
 @app.route("/lista/mensagens/<servidor>/<canal>/<horario>", methods=["GET"])
+@auth.login_required
 def get_server_messages(servidor, canal, horario):
-
-    if "authenticated" not in session or not session["authenticated"]:
-        print("not authenticated")
-        return Response(status=401)
     print(horario)
     return pegar_mensagens(servidor, canal)
 
+# Pega mensagens penndentes do servidor.
+# Logging foi desativado pois não é necessário.
 def pegar_mensagens(servidor, canal):
     mensagens = []
     if servidor:
@@ -344,16 +322,16 @@ def pegar_mensagens(servidor, canal):
             break
         mensagem_decodificada = mensagem.decode("utf-8")
         mensagens.append(json.loads(mensagem_decodificada))
-        print(f"Mensagem lida: {mensagem_decodificada}")
+        # print(f"(i) Mensagem lida: {mensagem_decodificada}")
     # Imprime as mensagens lidas
     if mensagens:
-        print(f"Mensagens lidas: {mensagens}")
+        # print(f"(i) Mensagens lidas: {mensagens}")
         return mensagens
     else:
-        print("Nenhuma mensagem encontrada")
+        # print("(!) Nenhuma mensagem foi encontrada")
         return mensagens
-
-if __name__ == "__main__":
-    if not iniciar_discord():
-        print("discord iniciado com sucesso")
-    app.run(host='0.0.0.0', port=80)
+        
+if not iniciar_discord():
+    print("discord iniciado com sucesso")
+else:
+    print("erro ao iniciar discord")

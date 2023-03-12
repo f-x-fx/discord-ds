@@ -1,5 +1,7 @@
-discord.py-self[voice]
 flask
+Flask-HTTPAuth
 redis
 pillow
+gunicorn
 requests
+discord.py-self[voice]

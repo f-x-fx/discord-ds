@@ -1,208 +1,18 @@
-import urllib
 from datetime import timedelta
 from random import gauss
-import discord
-import redis
-import asyncio
-import json
-r = redis.Redis(host='localhost', port=6379, db=0)
+import urllib, discord, redis, asyncio, json
+from utils import emoticon
 
+r = redis.Redis(host='localhost', port=6379, db=0)
+token = 'token aqui.'
 client = discord.Client()
 delay = 1
 lista_ids_liberadas = []
 nao_logado = True
-emoji_para_emoticon = {
-    "❤️": "<3",
-    "🧡": "<3",
-    "💛": "<3",
-    "💚": "<3",
-    "💙": "<3",
-    "💜": "<3",
-    "🖤": "<3",
-    "💔": "</3",
-    "❣️": "<3",
-    "💕": "<3",
-    "💞": "<3",
-    "💓": "<3",
-    "💗": "<3",
-    "💖": "<3",
-    "💘": "<3",
-    "💝": "<3",
-    "💟": "<3",
-    "❤️‍🔥": "<3",
-    "❤️‍🩹": "<3",
-    "🫀": "<3",
-    "❤️‍🔥": "<3",
-    "❤️‍🩹": "<3",
-    "💓": "<3",
-    "💔": "</3",
-    "❤️": "<3",
-    "💖": "<3",
-    "💗": "<3",
-    "💘": "<3",
-    "💝": "<3",
-    "💞": "<3",
-    "💌": "<3",
-    "💋": ":*",
-    "💏": ":-*",
-    "💑": ":-*",
-    "❤️‍🔥": "<3",
-    "❤️‍🩹": "<3",
-    "🧑‍❤️‍🧑": "<3",
-    "👩‍❤️‍👨": "<3",
-    "👨‍❤️‍👨": "<3",
-    "👩‍❤️‍👩": "<3",
-    "❤️‍🔥": "<3",
-    "❤️‍🩹": "<3",
-    "💖": "<3",
-    "💘": "<3",
-    "💝": "<3",
-    "💞": "<3",
-    "❤️": "<3",
-    "💕": "<3",
-    "💓": "<3",
-    "😀": ":D",
-    "😃": ":)",
-    "😄": ":D",
-    "😁": ":D",
-    "😆": ";)",
-    "😅": ":)",
-    "😂": ":D",
-    "🤣": ":D",
-    "😊": ":)",
-    "🙂": ":)",
-    "😉": ";)",
-    "😍": "<3",
-    "😘": ":*",
-    "😜": ";P",
-    "😝": ";P",
-    "😛": ";P",
-    "😋": ":P",
-    "😚": ":*",
-    "😙": ":*",
-    "😗": ":*",
-    "😖": ":(",
-    "😞": ":(",
-    "😔": ":(",
-    "😢": ":(",
-    "😭": ":'(",
-    "😨": "D:",
-    "😱": "D:",
-    "😠": ">:(",
-    "😡": ">:(",
-    "😷": ":X",
-    "🤒": ":X",
-    "🤕": ":X",
-    "🤢": ":X",
-    "🤮": ":X",
-    "🥵": "O:",
-    "🥶": "O:",
-    "🥴": ";X",
-    "😴": ":Z",
-    "🤤": ":P",
-    "😪": ":Z",
-    "🙄": ":/",
-    "🤔": ":/",
-    "😐": ":|",
-    "😑": ":|",
-    "😶": ":|",
-    "😏": ";)",
-    "😎": "8)",
-    "🤓": "8)",
-    "🧐": ":/",
-    "😕": ":/",
-    "🙁": ":(",
-    "☹️": ":(",
-    "😖": ":(",
-    "😟": ":(",
-    "😔": ":(",
-    "😞": ":(",
-    "😣": ":(",
-    "😫": ":(",
-    "😩": ":(",
-    "😢": ":(",
-    "😭": ":'(",
-    "😤": ">:(",
-    "😠": ">:(",
-    "😡": ">:(",
-    "🤬": ">:(",
-    "🤯": "O:",
-    "😳": "O:",
-    "🥵": "O:",
-    "🥶": "O:",
-    "😱": "O:",
-    "😨": "O:",
-    "😰": "O:",
-    "🤢": ":X",
-    "🤮": ":X",
-    "🤒": ":X",
-    "🤕": ":X",
-    "🥴": ";X",
-    "😷": ":X",
-    "🤧": ":X",
-    "😈": ">:)",
-    "👿": ">:(",
-    "💩": ":P",
-    "👻": ":O",
-    "💀": ":X",
-    "👽": "8)",
-    "👾": "8)",
-    "🤖": "8)",
-    "😸": ":)",
-    "😹": ":D",
-    "😻": "<3",
-    "🙀": ":O",
-    "😿": ":(",
-    "😾": ">:(",
-    "👋": "<o/",
-    "🤚": "<o/",
-    "🖐️": "<o/",
-    "✋": "<o/",
-    "👌": ":)",
-    "🤏": ":)",
-    "🤞": ":X",
-    "🤟": "<3",
-    "🤘": "\\m/",
-    "🤙": "</3",
-    "🖕": ">:(",
-    "👈": "<",
-    "👉": ">",
-    "👆": "^",
-    "🖕": "V",
-    "👇": "v",
-    "☝️": "^",
-    "👍": ":)",
-    "👎": ":(",
-    "✊": "o/",
-    "👊": "o/",
-    "🤛": "o/",
-    "🤜": "o/",
-    "🤚": "<o/",
-    "👏": "*clap*",
-    "🙌": "*clap*",
-    "👐": "*clap*",
-    "🤲": "*clap*",
-    "🤝": "*shake*",
-    "🙏": "pray",
-    "💪": "strong",
-    "🦶": "foot",
-    "🦵": "leg",
-    "🦷": "tooth",
-    "👅": ":P",
-    "👄": ":)",
-    "👂": "^",
-    "👃": ":^)",
-    "🧠": "brain",
-    "🦴": "bone",
-    "🦷": "tooth",
-    "👀": "o_o",
-    "👁️": "o_o",
-    "👤": "bust_in_silhouette",
-    "👥": "busts_in_silhouette",
-}
+
 
 async def processar_acoes():
-    print("processando acoes...")
+    print("(i) Processando Ações do Redis...")
     while True:
         try:
             acoes = []
@@ -243,7 +53,7 @@ async def processar_acoes():
 
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user.name}')
+    print(f'(i) Logado como: {client.user.name}')
     r.set("nome", client.user.name)
     global nao_logado
     if nao_logado:
@@ -264,7 +74,6 @@ async def enviar_mensagem(conteudo, id_servidor, id_canal_texto):
         return f"{e}"
 
 async def historico_mensagens(id_servidor, id_canal_texto):
-    print("historico mensagens ativado")
     try:
         if id_servidor:
             servidor = client.get_guild(int(id_servidor))
@@ -280,13 +89,14 @@ async def historico_mensagens(id_servidor, id_canal_texto):
         print(e)
         return "[]"
 
-def servidor_liberado(id):
-    if id in lista_ids_liberadas: return True
+
+def servidor_liberado(id_servidor):
+    if id_servidor in lista_ids_liberadas: return True
     return False
 
 
-def lista_canais_texto(id):
-    servidor = client.get_guild(int(id))
+def lista_canais_texto(id_canal):
+    servidor = client.get_guild(int(id_canal))
     canais_texto = []
     for text_channel in servidor.text_channels:
         canais_texto.append(
@@ -294,7 +104,6 @@ def lista_canais_texto(id):
                 "nome": text_channel.name,
                 "id_canal": str(text_channel.id)
             })
-
     return json.dumps(canais_texto)
 
 
@@ -343,12 +152,10 @@ async def on_message(message):
     else:
         push_key = f'msglist.{message.channel.id}'
     if not servidor_liberado(push_key):
-        print(f"{push_key} nao foi liberadi")
+        print(f"(!) {push_key} nao foi liberado.")
         return
     mensagem = json.dumps(gerar_dict_mensagem(message))
-    print(f"\nchave da mensagem: {push_key},"
-          f"\nconteudo da mensagem: \n{mensagem}"
-          f"\n id_mensagem redis: {r.lpush(push_key, mensagem)}")
+    print(f"\n(i) id_mensagem Redis: {r.lpush(push_key, mensagem)}")
 
 
 def gerar_dict_mensagem(message):
@@ -369,9 +176,8 @@ def gerar_dict_mensagem(message):
         }
 
 
-
 def processar_nome(nome):
-    return nome
+    return emoticon.converter(nome)
 
 
 def processar_horas(horario):
@@ -388,13 +194,11 @@ def processar_horas(horario):
 
 
 def processar_mensagem(mensagem):
-    for emoji, emoticon in emoji_para_emoticon.items():
-        mensagem = mensagem.replace(emoji, emoticon)
-    return mensagem
+    return emoticon.converter(mensagem)
 
 
 def carregar_discord():
-    print("carregando discord")
+    print("(i) Carregando Discord")
     client.run(token)
 
 
