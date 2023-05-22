@@ -1,5 +1,5 @@
 # discord-ds
-Cliente de discord leve otimizado para o nintendo dsi browser 
+Cliente de Discord otimizado para o Nintendo DSI Browser
 
 ## Intuito
 Quis fazer um cliente para dispositivos bem antigos, que muitas vezes tem um navegador de internet muito simples, como no caso do Nintendo DSi. Ele apenas tem 16mb ram e 133mhz, o que apesar de ser suficiente pra rodar jogos de ds e dsi que não tem muita diferença entre os dois, na questão de aplicativos como o Nintendo DSi Browser, ele entrega relativamente bem, porém por ser muito desatualizado não suporta as tecnologias mais recentes e o uso de javascript nele é limitado, por isso foi criado o Discord DS.
